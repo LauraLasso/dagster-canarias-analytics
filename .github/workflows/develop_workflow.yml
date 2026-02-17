@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - develop
-  workflow_dispatch: # Permite ejecución manual desde la pestaña Actions
+  workflow_dispatch: 
 
 jobs:
   # PRIMER JOB: Validación
@@ -42,8 +42,6 @@ jobs:
     name: Execute Pipeline
     needs: validate # <--- IMPORTANTE: Solo corre si 'validate' termina en verde
     runs-on: ubuntu-latest
-    # Solo ejecuta automáticamente en push si tú lo deseas, 
-    # o siempre que se lance manualmente (workflow_dispatch)
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     
     steps:
@@ -64,5 +62,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: generated-graphs
-          path: images/dagster/ # Asegúrate de que esta ruta coincide con tu código
+          path: images/dagster/ 
           if-no-files-found: warn
