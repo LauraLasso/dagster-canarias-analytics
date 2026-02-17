@@ -1,0 +1,72 @@
+name: Dagster CI & Execution
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+  workflow_dispatch: # Permite ejecución manual desde la pestaña Actions
+
+jobs:
+  # PRIMER JOB: Validación
+  validate:
+    name: Validate Dagster Code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install dagster dagster-webserver pandas plotnine openpyxl flake8
+
+      - name: Lint with flake8
+        run: |
+          # Detiene la build si hay errores de sintaxis
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Run Dagster Validate
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/src
+          dagster definitions validate -d src/dagster_app -m definitions
+
+  # SEGUNDO JOB: Ejecución (Solo si el primero tiene éxito)
+  execute:
+    name: Execute Pipeline
+    needs: validate # <--- IMPORTANTE: Solo corre si 'validate' termina en verde
+    runs-on: ubuntu-latest
+    # Solo ejecuta automáticamente en push si tú lo deseas, 
+    # o siempre que se lance manualmente (workflow_dispatch)
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install dagster pandas plotnine openpyxl
+
+      - name: Execute Assets
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/src
+          # Materializa todos los assets y genera los gráficos
+          dagster asset materialize -d src/dagster_app -m definitions --select "*"
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-graphs
+          path: images/dagster/ # Asegúrate de que esta ruta coincide con tu código
+          if-no-files-found: warn
