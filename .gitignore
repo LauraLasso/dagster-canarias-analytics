@@ -24,8 +24,8 @@ storage/
 
 # --- Salidas de Análisis ---
 # Ignora las imágenes generadas para que no ensucien el historial de Git
-images/dagster/*.png
-images/test/*.png
+# images/dagster/*.png
+# images/test/*.png
 
 # --- Sistema y Editores ---
 .DS_Store
