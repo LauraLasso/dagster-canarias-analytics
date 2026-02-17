@@ -1,0 +1,34 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+.env
+.tmp
+
+# --- Dagster & Orquestación ---
+# Ignora la base de datos local de Dagster y archivos temporales
+.dagster/
+dagster.yaml
+storage/
+
+# --- Datos y Temporales de Excel ---
+# Ignora archivos temporales de Office (como el ~$nivelestudios.xlsx de tu imagen)
+~$*.xlsx
+~$*.xls
+# Opcional: Ignora los datasets si son muy pesados o sensibles
+# data/*.csv
+# data/*.xlsx
+
+# --- Salidas de Análisis ---
+# Ignora las imágenes generadas para que no ensucien el historial de Git
+images/dagster/*.png
+images/test/*.png
+
+# --- Sistema y Editores ---
+.DS_Store
+.vscode/
+.idea/
+*.log
