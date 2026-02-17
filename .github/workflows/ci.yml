@@ -34,4 +34,4 @@ jobs:
       run: |
         # Valida que las definiciones de Dagster carguen correctamente
         export PYTHONPATH=$PYTHONPATH:$(pwd)/src
-        dagster asset check -d src/dagster_app -m definitions
+        dagster definitions validate -m dagster_app.definitions
