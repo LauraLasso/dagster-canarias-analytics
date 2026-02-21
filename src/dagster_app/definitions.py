@@ -1,14 +1,12 @@
 """
-Definiciones de Dagster: Carga todos los assets de los 3 pipelines
+definitions.py
+Lanzar con: dagster dev -f definitions.py
 """
 
-from dagster import Definitions, load_assets_from_modules
-
+from dagster import Definitions, load_assets_from_modules, load_asset_checks_from_modules
 from src.dagster_app.assets import renta_canarias, renta_islas, nivel_estudios
 
-# Cargar assets de los 3 módulos
-all_assets = load_assets_from_modules([renta_canarias, renta_islas, nivel_estudios])
-
 defs = Definitions(
-    assets=all_assets,
+    assets=load_assets_from_modules([renta_canarias, renta_islas, nivel_estudios]),
+    asset_checks=load_asset_checks_from_modules([renta_canarias, renta_islas, nivel_estudios])
 )
