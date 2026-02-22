@@ -7,10 +7,12 @@ Este proyecto utiliza **Dagster** para orquestar un pipeline de datos que analiz
 El repositorio está organizado para separar la lógica de negocio de los datos y la configuración de infraestructura:
 
 - **`src/dagster_app/`**: Núcleo de la aplicación.
-    - **`assets/`**: Código Python con la lógica de extracción, transformación y generación de gráficos (Plotnine).
+    - **`assets/`**: Código Python con la lógica de extracción, transformación y generación de gráficos (Plotnine). En esta rama, se le añadieron checks a cada etapa correspondiente en cada .py, que generaban una visualización diferente.
     - **`definitions.py`**: Definición de los activos y recursos de Dagster.
 - **`data/`**: Datasets originales en formato Excel (`.xlsx`).
 - **`images/dagster/`**: Resultados visuales generados automáticamente por el pipeline.
+- **`docs/`**: En esta carpeta se encuentran los enunciados de las prácticas 2 y 3, y el informe correspondiente a la práctica 3.
+- **`tests/`**: En esta carpeta se encuentran los archivos .py empleados para responder las primeras preguntas del enunciado. Se usaron los archivos definitions.py y test_checks.py.
 - **`.github/workflows/`**: Automatizaciones de Integración y Entrega Continua.
 
 ---
@@ -21,6 +23,7 @@ El proyecto sigue una estrategia de ramificación para garantizar la estabilidad
 
 * **`main`**: Rama de producción. Contiene el código estable y los resultados finales (imágenes y README). Está libre de workflows de ejecución para evitar ruidos.
 * **`develop`**: Rama de desarrollo. Aquí reside la lógica de **Integración Continua**. Todos los experimentos y actualizaciones se realizan aquí antes de pasar a la rama principal.
+* **`practica-calidad-checks`**: Rama de calidad (DataOps). En esta rama se implementan los Asset Checks de Dagster para validar la integridad de los datos de renta y educación, asegurando que las visualizaciones cumplan con los estándares de diseño y veracidad antes de su materialización.
 
 ---
 
