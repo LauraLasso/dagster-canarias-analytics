@@ -11,6 +11,7 @@ from plotnine import (ggplot, aes, geom_polygon, scale_fill_gradient,
 from dagster import asset, AssetExecutionContext, MaterializeResult, MetadataValue
 from pathlib import Path
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 DATA_DIR = BASE_DIR / "data"
 OUTPUT_DIR = BASE_DIR / "images" / "dagster"
@@ -62,21 +63,37 @@ def mapa_renta_municipios(context: AssetExecutionContext):
     output_path = str(OUTPUT_DIR / "mapa_renta_municipios.png")
     geojson_path = DATA_DIR / "Municipios-2024.json"
 
-    # Cargar GeoJSON
+    # 1. Cargar GeoJSON
     gdf = gpd.read_file(geojson_path)
     context.log.info(f"✓ GeoJSON cargado: {len(gdf)} municipios")
     context.log.info(f"✓ Columnas disponibles: {list(gdf.columns)}")
 
-    # Reproyectar a WGS84
+    # 2. Reproyectar a WGS84
     gdf = gdf.to_crs(epsg=4326)
 
-    # Extraer coordenadas de polígonos como DataFrame largo
+    # 3. Detectar columnas automáticamente (misma lógica que el test)
+    COL_NOMBRE = 'NOMBRE'
+    COL_VALOR  = 'TASA_PARO'
+
+    if COL_NOMBRE not in gdf.columns:
+        context.log.warning(f"⚠ '{COL_NOMBRE}' no encontrada, usando primera columna")
+        COL_NOMBRE = gdf.columns[0]
+
+    if COL_VALOR not in gdf.columns:
+        numericas = gdf.select_dtypes(include='number').columns.tolist()
+        context.log.warning(f"⚠ '{COL_VALOR}' no encontrada. Numéricas disponibles: {numericas}")
+        COL_VALOR = numericas[0] if numericas else None
+
+    context.log.info(f"✓ Columna nombre: {COL_NOMBRE}")
+    context.log.info(f"✓ Columna valor:  {COL_VALOR}")
+    context.log.info(f"✓ Rango {COL_VALOR}: {gdf[COL_VALOR].min():.2f} – {gdf[COL_VALOR].max():.2f}")
+
+    # 4. Extraer coordenadas de polígonos como DataFrame largo
     filas = []
     for idx, row in gdf.iterrows():
         geom = row.geometry
-        # ⚠️ Ajusta 'NOMBRE' y 'TASA_PARO' a los nombres reales del GeoJSON
-        nombre = row.get('NOMBRE', row.get('nombre', str(idx)))
-        valor = row.get('TASA_PARO', row.get('tasa_paro', None))
+        nombre = row[COL_NOMBRE] if COL_NOMBRE in row else str(idx)
+        valor = row[COL_VALOR] if COL_VALOR else None
         if geom is None:
             continue
         polys = geom.geoms if geom.geom_type == 'MultiPolygon' else [geom]
@@ -91,14 +108,18 @@ def mapa_renta_municipios(context: AssetExecutionContext):
                 })
 
     df_coords = pd.DataFrame(filas)
+    df_coords['valor'] = pd.to_numeric(df_coords['valor'], errors='coerce')
     context.log.info(f"✓ Coordenadas extraídas: {len(df_coords)} puntos")
+    context.log.info(f"✓ Municipios únicos: {df_coords['municipio'].nunique()}")
+    context.log.info(f"✓ Tipo columna valor: {df_coords['valor'].dtype}")
 
+    # 5. Generar gráfico
     grafico = (
         ggplot(df_coords, aes(x='x', y='y', group='group', fill='valor'))
         + geom_polygon(color='white', size=0.2)
         + scale_fill_gradient(low='#d4e6f1', high='#1a5276', na_value='#cccccc')
         + coord_fixed()
-        + labs(title='Indicadores Laborales por Municipio — Canarias 2024', fill='Valor')
+        + labs(title='Indicadores Laborales por Municipio — Canarias 2024', fill=COL_VALOR)
         + theme_void()
         + theme(figure_size=(16, 10))
     )
