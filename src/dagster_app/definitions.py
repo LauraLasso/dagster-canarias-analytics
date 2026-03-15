@@ -4,10 +4,10 @@ Definiciones de Dagster: Carga todos los assets de los 3 pipelines
 
 from dagster import Definitions, load_assets_from_modules, load_asset_checks_from_modules
 
-from src.dagster_app.assets import renta_canarias_ia, renta_islas_ia, nivel_estudios_ia
+from src.dagster_app.assets import renta_canarias_ia, renta_islas_ia, nivel_estudios_ia, mapa_canarias_ia
 
 # Cargar assets de los 3 módulos
-all_assets = load_assets_from_modules([renta_canarias_ia, renta_islas_ia, nivel_estudios_ia])
+all_assets = load_assets_from_modules([renta_canarias_ia, renta_islas_ia, nivel_estudios_ia, mapa_canarias_ia])
 all_checks = load_asset_checks_from_modules([renta_canarias_ia, renta_islas_ia, nivel_estudios_ia])
 
 defs = Definitions(
