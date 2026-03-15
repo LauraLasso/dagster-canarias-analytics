@@ -35,6 +35,29 @@ def generar_plot(df):
     return plot
 """
 
+def subir_imagen_a_ghpages(imagen_path: str, context):
+    """Sube una imagen a la rama gh-pages para publicarla via GitHub Pages."""
+    import shutil, tempfile
+    repo_url = subprocess.run(
+        ["git", "remote", "get-url", "origin"],
+        capture_output=True, text=True
+    ).stdout.strip()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        subprocess.run(["git", "clone", "--branch", "gh-pages", "--single-branch", repo_url, tmpdir])
+        destino = Path(tmpdir) / Path(imagen_path).name
+        shutil.copy2(imagen_path, destino)
+        subprocess.run(["git", "-C", tmpdir, "add", Path(imagen_path).name])
+        result = subprocess.run(
+            ["git", "-C", tmpdir, "commit", "-m", f"Auto: {Path(imagen_path).name} actualizado"],
+            capture_output=True, text=True
+        )
+        if "nothing to commit" in result.stdout:
+            context.log.info("gh-pages: imagen sin cambios, no se hace push")
+        else:
+            subprocess.run(["git", "-C", tmpdir, "push", "origin", "gh-pages"])
+            context.log.info(f"✓ Imagen publicada en gh-pages: {Path(imagen_path).name}")
+
 
 @asset(description="Carga el dataset de distribución de renta en Canarias desde CSV")
 def raw_renta_canarias(context: AssetExecutionContext) -> pd.DataFrame:
@@ -256,9 +279,13 @@ def grafico_evolucion_canarias(
     subprocess.run(["git", "add", output_path])
     subprocess.run(["git", "commit", "-m", "Auto: grafico_evolucion_canarias actualizado"])
     subprocess.run(["git", "push"])
+    subir_imagen_a_ghpages(output_path, context)
     return MaterializeResult(
         metadata={
             "output_path": MetadataValue.path(output_path),
+            "url_publica": MetadataValue.url(
+                "https://LauraLasso.github.io/dagster-canarias-analytics/grafico_evolucion_canarias.png"
+            ),
             "mensaje": MetadataValue.text("Gráfico Canarias generado")
         }
     )

@@ -31,6 +31,29 @@ def generar_plot(df):
 
 NIVELES_VALIDOS = ['Primaria', 'ESO', 'Bachillerato', 'FP', 'Universidad']
 
+def subir_imagen_a_ghpages(imagen_path: str, context):
+    """Sube una imagen a la rama gh-pages para publicarla via GitHub Pages."""
+    import shutil, tempfile
+    repo_url = subprocess.run(
+        ["git", "remote", "get-url", "origin"],
+        capture_output=True, text=True
+    ).stdout.strip()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        subprocess.run(["git", "clone", "--branch", "gh-pages", "--single-branch", repo_url, tmpdir])
+        destino = Path(tmpdir) / Path(imagen_path).name
+        shutil.copy2(imagen_path, destino)
+        subprocess.run(["git", "-C", tmpdir, "add", Path(imagen_path).name])
+        result = subprocess.run(
+            ["git", "-C", tmpdir, "commit", "-m", f"Auto: {Path(imagen_path).name} actualizado"],
+            capture_output=True, text=True
+        )
+        if "nothing to commit" in result.stdout:
+            context.log.info("gh-pages: imagen sin cambios, no se hace push")
+        else:
+            subprocess.run(["git", "-C", tmpdir, "push", "origin", "gh-pages"])
+            context.log.info(f"✓ Imagen publicada en gh-pages: {Path(imagen_path).name}")
+
 
 @asset(description="Carga datos de niveles de estudios desde Excel", group_name="estudios")
 def raw_nivel_estudios(context: AssetExecutionContext) -> pd.DataFrame:
@@ -271,9 +294,13 @@ def viz_educacion_isla_2023(
     subprocess.run(["git", "add", output_path])
     subprocess.run(["git", "commit", "-m", "Auto: perfil_educativo_isla_2023 actualizado"])
     subprocess.run(["git", "push"])
+    subir_imagen_a_ghpages(output_path, context)
     return MaterializeResult(
         metadata={
             "output_path": MetadataValue.path(output_path),
+            "url_publica": MetadataValue.url(
+                "https://LauraLasso.github.io/dagster-canarias-analytics/perfil_educativo_isla_2023.png"
+            ),
             "mensaje": MetadataValue.text("Gráfico educativo generado")
         }
     )
