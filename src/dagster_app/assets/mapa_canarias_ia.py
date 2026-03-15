@@ -60,7 +60,7 @@ def subir_imagen_a_ghpages(imagen_path: str, context):
 @asset(description="Genera mapa de indicadores laborales por municipio desde GeoJSON del ISTAC", group_name="canarias")
 def mapa_renta_municipios(context: AssetExecutionContext):
     output_path = str(OUTPUT_DIR / "mapa_renta_municipios.png")
-    geojson_path = DATA_DIR / "indicadores-laborales-municipios-canarias-2024.geojson"
+    geojson_path = DATA_DIR / "Municipios-2024.json"
 
     # Cargar GeoJSON
     gdf = gpd.read_file(geojson_path)
